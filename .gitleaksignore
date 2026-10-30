@@ -1,0 +1,15 @@
+# Test mocks (falsos positivos de testes unitários)
+tests/idempotency.test.ts:generic-api-key:503
+tests/api-routes.test.ts:generic-api-key:491
+tests/api-routes.test.ts:generic-api-key:514
+9e7016f7844bfb3424caa45413217e050246eb44:tests/idempotency.test.ts:generic-api-key:503
+9e7016f7844bfb3424caa45413217e050246eb44:tests/api-routes.test.ts:generic-api-key:491
+9e7016f7844bfb3424caa45413217e050246eb44:tests/api-routes.test.ts:generic-api-key:514
+
+# Relatório histórico gitleaks-report.json
+9e7016f7844bfb3424caa45413217e050246eb44:gitleaks-report.json:generic-api-key:9
+9e7016f7844bfb3424caa45413217e050246eb44:gitleaks-report.json:generic-api-key:10
+9e7016f7844bfb3424caa45413217e050246eb44:gitleaks-report.json:generic-api-key:30
+9e7016f7844bfb3424caa45413217e050246eb44:gitleaks-report.json:generic-api-key:31
+9e7016f7844bfb3424caa45413217e050246eb44:gitleaks-report.json:generic-api-key:51
+9e7016f7844bfb3424caa45413217e050246eb44:gitleaks-report.json:generic-api-key:52

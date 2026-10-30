@@ -42,3 +42,7 @@ docker_data/
 
 # Internal Architecture & Planning (Sensitive deployment guides)
 .plans/
+
+# Security scan reports
+gitleaks-report.json
+*-report.json
