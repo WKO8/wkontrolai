@@ -59,52 +59,52 @@ O **WKontrolAI** adota a topologia de microsserviços lógicos unificados em um 
 
 ```mermaid
 graph TD
-    subgraph Clientes & Acessos
-        WA[📱 Usuário WhatsApp]
-        PWA[💻 Navegador Web / PWA Mobile & Desktop]
+    subgraph CLIENTS ["Clientes & Acessos"]
+        WA["📱 Usuário WhatsApp"]
+        PWA["💻 Navegador Web / PWA Mobile & Desktop"]
     end
 
-    subgraph VPS Oracle Cloud Always Free (Docker Stack)
-        CADDY[Caddy 2 Reverse Proxy<br/>SSL Automático Let's Encrypt]
+    subgraph VPS ["VPS Oracle Cloud Always Free (Docker Stack)"]
+        CADDY["Caddy 2 Reverse Proxy<br/>SSL Automático Let's Encrypt"]
         
-        subgraph Docker Network: wkontrol_net
-            EVO[Evolution API v2.2.3<br/>Node.js WhatsApp Engine]
-            APP[Next.js 15 App Router<br/>PWA Frontend + API Routes]
-            WORKER[Node.js Background Worker<br/>BullMQ Queue Consumer]
-            REDIS[(Redis 7 In-Memory<br/>Deduplicação SETNX + Filas + Mutex)]
-            PG[(PostgreSQL 16 Relational<br/>RLS Multi-Tenant Nativo)]
+        subgraph NET ["Docker Network: wkontrol_net"]
+            EVO["Evolution API v2.2.3<br/>Node.js WhatsApp Engine"]
+            APP["Next.js 15 App Router<br/>PWA Frontend + API Routes"]
+            WORKER["Node.js Background Worker<br/>BullMQ Queue Consumer"]
+            REDIS[("Redis 7 In-Memory<br/>Deduplicação SETNX + Filas + Mutex")]
+            PG[("PostgreSQL 16 Relational<br/>RLS Multi-Tenant Nativo")]
         end
     end
 
-    subgraph Provedores Especializados de IA & Serviços
-        GROQ[Groq Cloud API<br/>Whisper-large-v3 em LPUs <400ms]
-        JEV[TypeSafe AI SDK<br/>Jev System One: noul, choice, score]
-        DEEPSEEK[DeepSeek API<br/>V3 Chat & Multimodal Vision OCR]
-        RESEND[Resend API<br/>Emails Transacionais & Magic Links]
+    subgraph AI_SERVICES ["Provedores Especializados de IA & Serviços"]
+        GROQ["Groq Cloud API<br/>Whisper-large-v3 em LPUs (&lt;400ms)"]
+        JEV["TypeSafe AI SDK<br/>Jev System One: noul, choice, score"]
+        DEEPSEEK["DeepSeek API<br/>V3 Chat & Multimodal Vision OCR"]
+        RESEND["Resend API<br/>Emails Transacionais & Magic Links"]
     end
 
     %% Fluxos de Mensagem
-    WA -->|Texto / Áudio / Foto| EVO
-    EVO -->|Webhook HTTP POST /api/webhooks/evolution| APP
-    APP -->|1. Valida Timing-Safe Key & SET NX EX| REDIS
-    APP -->|2. Enfileira Job com deduplicação| REDIS
-    REDIS -->|3. Pop Inbound Job com Mutex Lock| WORKER
+    WA -->|"Texto / Áudio / Foto"| EVO
+    EVO -->|"Webhook HTTP POST /api/webhooks/evolution"| APP
+    APP -->|"1. Valida Timing-Safe Key & SET NX EX"| REDIS
+    APP -->|"2. Enfileira Job com deduplicação"| REDIS
+    REDIS -->|"3. Pop Inbound Job com Mutex Lock"| WORKER
     
     %% Pipeline de IA
-    WORKER -->|Transcrição Áudio| GROQ
-    WORKER -->|Decisão Booleana & Categorização| JEV
-    WORKER -->|Extração Estruturada & OCR| DEEPSEEK
+    WORKER -->|"Transcrição Áudio"| GROQ
+    WORKER -->|"Decisão Booleana & Categorização"| JEV
+    WORKER -->|"Extração Estruturada & OCR"| DEEPSEEK
     
     %% Persistência & Resposta
-    WORKER -->|SQL com SET LOCAL tenant_id| PG
-    WORKER -->|Envia Mensagem Interativa / Resposta| EVO
-    EVO -->|WhatsApp Message| WA
+    WORKER -->|"SQL com SET LOCAL tenant_id"| PG
+    WORKER -->|"Envia Mensagem Interativa / Resposta"| EVO
+    EVO -->|"WhatsApp Message"| WA
 
     %% Acesso Web PWA
-    PWA -->|HTTPS / PWA Manifest| CADDY
-    CADDY -->|Reverse Proxy :3000| APP
-    APP -->|Queries Drizzle ORM + RLS| PG
-    APP -->|Magic Links| RESEND
+    PWA -->|"HTTPS / PWA Manifest"| CADDY
+    CADDY -->|"Reverse Proxy :3000"| APP
+    APP -->|"Queries Drizzle ORM + RLS"| PG
+    APP -->|"Magic Links"| RESEND
 ```
 
 ---
