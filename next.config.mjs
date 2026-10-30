@@ -3,6 +3,7 @@ const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   poweredByHeader: false,
+  productionBrowserSourceMaps: false,
   eslint: {
     ignoreDuringBuilds: true,
   },

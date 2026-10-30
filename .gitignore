@@ -43,6 +43,11 @@ docker_data/
 # Internal Architecture & Planning (Sensitive deployment guides)
 .plans/
 
-# Security scan reports
+# Security scan reports and scanner artifacts
 gitleaks-report.json
 *-report.json
+*-report.html
+zap*
+zap_report.html
+zap.yaml
+nuclei*

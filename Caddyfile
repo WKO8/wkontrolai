@@ -1,40 +1,109 @@
-# ==========================================
+# ==============================================================================
 # Caddy Reverse Proxy Configuration
-# Automatic SSL (Let's Encrypt) for WKontrolAI
-# ==========================================
+# Automatic SSL (Let's Encrypt), Hardened Security Headers & Edge Protection
+# WKontrolAI Enterprise Architecture
+# ==============================================================================
 
-# Domínio Principal do Dashboard PWA & API
-{$APP_DOMAIN:app.exemplo.com} {
-    reverse_proxy app:3000 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+# Snippet: Cabeçalhos de Segurança HTTP (OWASP & Mozilla Observatory A+ Grade)
+(security_headers) {
+	header {
+		# HSTS: Força HTTPS estrito por 1 ano, incluindo todos os subdomínios e lista de preload
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 
-    # Gzip e Zstandard compression
-    encode gzip zstd
+		# Previne MIME-type sniffing
+		X-Content-Type-Options "nosniff"
 
-    # Logs de acesso
-    log {
-        output stdout
-        format console
-    }
+		# Proteção anti-clickjacking rigorosa (impede renderização em iframes/frames externos)
+		X-Frame-Options "DENY"
+
+		# Controle de Referrer para resguardar a privacidade e evitar vazamento de URLs internas
+		Referrer-Policy "strict-origin-when-cross-origin"
+
+		# Desativa APIs sensíveis de hardware e recursos não utilizados (LGPD & Privacy Sandbox)
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+
+		# Bloqueia carregamento de políticas cross-domain via Flash, PDF e Silverlight
+		X-Permitted-Cross-Domain-Policies "none"
+
+		# Isolamento de contexto de janela e processos do navegador (Spectre / XS-Leaks)
+		Cross-Origin-Opener-Policy "same-origin"
+
+		# Impede que recursos protegidos sejam carregados por origens não autorizadas
+		Cross-Origin-Resource-Policy "same-origin"
+
+		# Content-Security-Policy rigorosa compatível com Next.js 15 App Router e PWA
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https: wss: ws:; media-src 'self' data: blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests;"
+
+		# Oculta fingerprint do servidor e de runtimes de aplicação
+		-Server
+		-X-Powered-By
+
+		# Aplica os cabeçalhos de forma unificada nas respostas retornadas pelo reverse proxy
+		defer
+	}
 }
 
-# Subdomínio opcional para a Evolution API (WhatsApp Engine)
+# Snippet: Cabeçalhos de Segurança para a Evolution API (WhatsApp REST/WebSocket API)
+(evolution_security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		-X-Powered-By
+		defer
+	}
+}
+
+# Snippet: Bloqueio de Arquivos Sensíveis na Borda (Edge Protection)
+(block_sensitive) {
+	@blocked {
+		path *.map *.env* *.git* *docker-compose* *Dockerfile*
+	}
+	respond @blocked "Not Found" 404 {
+		close
+	}
+}
+
+# ------------------------------------------------------------------------------
+# 1. Domínio Principal do Dashboard PWA & API (Next.js 15 App Router)
+# ------------------------------------------------------------------------------
+{$APP_DOMAIN:app.exemplo.com} {
+	import block_sensitive
+	import security_headers
+
+	reverse_proxy app:3000 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
+
+	# Compactação Gzip e Zstandard de alta performance
+	encode gzip zstd
+
+	# Logs de acesso estruturados
+	log {
+		output stdout
+		format console
+	}
+}
+
+# ------------------------------------------------------------------------------
+# 2. Subdomínio da Evolution API (WhatsApp Engine)
+# ------------------------------------------------------------------------------
 {$EVOLUTION_DOMAIN:wa.exemplo.com} {
-    reverse_proxy evolution-api:8080 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+	import block_sensitive
+	import evolution_security_headers
 
-    encode gzip zstd
+	reverse_proxy evolution-api:8080 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+	}
 
-    log {
-        output stdout
-        format console
-    }
+	encode gzip zstd
+
+	log {
+		output stdout
+		format console
+	}
 }
