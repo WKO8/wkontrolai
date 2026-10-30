@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#022c22" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="wGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="aiGrad512" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <filter id="glow512" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad512)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#10b981" stroke-width="4" stroke-opacity="0.3" />
+  
+  <!-- Circuit Nodes / AI grid hint -->
+  <circle cx="128" cy="128" r="8" fill="#34d399" opacity="0.4" />
+  <circle cx="384" cy="128" r="8" fill="#38bdf8" opacity="0.4" />
+  <line x1="128" y1="128" x2="180" y2="128" stroke="#34d399" stroke-width="4" opacity="0.3" />
+  <line x1="332" y1="128" x2="384" y2="128" stroke="#38bdf8" stroke-width="4" opacity="0.3" />
+
+  <!-- The "W" Monogram with AI nodes -->
+  <path d="M112 176 L165 358 L256 230 L347 358 L400 176" fill="none" stroke="url(#wGrad512)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow512)" />
+
+  <!-- AI Sparks/Nodes -->
+  <circle cx="256" cy="230" r="16" fill="#38bdf8" filter="url(#glow512)" />
+  <circle cx="165" cy="358" r="14" fill="#34d399" />
+  <circle cx="347" cy="358" r="14" fill="#34d399" />
+
+  <!-- Chat / Sparkle indicator -->
+  <path d="M363 325 Q384 310 400 330 Q416 310 437 325 Q421 347 437 368 Q416 357 400 379 Q384 357 363 368 Q379 347 363 325 Z" fill="url(#aiGrad512)" opacity="0.9" />
+</svg>

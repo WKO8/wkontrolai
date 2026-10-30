@@ -1,0 +1,52 @@
+version: "2.0"
+
+# Configurações do Agente Orquestrador Principal
+orchestrator:
+  default_mode: "coordinated" # Mantém o agente principal como despachante
+  max_subagent_depth: 2       # Evita subagentes chamando infinitos subagentes em cascata
+  artifacts_dir: ".plans"     # Pasta onde os contratos e relatórios (.md) são salvos
+  context_pruning: true       # Remove logs brutos do histórico do pai após término da task
+
+# Configurações de Execução e Isolamento
+workspace:
+  isolation_strategy: "git-worktree" # Isola Dev e QA em worktrees temporárias sem sujar sua branch
+  cleanup_on_finish: true            # Remove worktrees temporárias após o fechamento da tarefa
+
+# Políticas de Segurança e Execução de Ferramentas (MCP / Tools)
+permissions:
+  # Comandos de terminal que os agentes (especialmente QA e BackendDev) podem rodar sem travar pedindo confirmação humana
+  allowed_commands:
+    - "pnpm test*"
+    - "npm test*"
+    - "vitest*"
+    - "jest*"
+    - "pytest*"
+    - "pnpm run build*"
+    - "npm run build*"
+    - "pnpm run type-check*"
+    - "pnpm run lint*"
+    - "git diff*"
+    - "git status*"
+
+  # Comandos estritamente bloqueados para qualquer agente
+  blocked_commands:
+    - "rm -rf /"
+    - "rm -rf ~"
+    - "git push --force*"
+    - "git reset --hard*"
+    - "npm publish*"
+
+  # Arquivos e pastas sensíveis que NENHUM agente tem permissão de leitura ou edição
+  protected_paths:
+    - ".env"
+    - ".env.*"
+    - "*.pem"
+    - "*.key"
+    - ".git/**"
+    - "node_modules/**"
+
+# Gestão de Consumo e Guardrails (Evita loops e estouro de contexto)
+limits:
+  max_iterations_per_agent: 15 # Se o Dev tentar consertar o código 15 vezes sem sucesso, ele para e avisa
+  max_tokens_per_task: 60000   # Teto de tokens por subagente para conter custos
+  timeout_seconds: 300         # Timeout de 5 minutos por execução de agente

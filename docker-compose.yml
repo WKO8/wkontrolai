@@ -1,0 +1,120 @@
+services:
+  # 1. Next.js 15 PWA (Frontend & API)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: wkontrol_app
+    restart: unless-stopped
+    ports:
+      # Exposto apenas localmente no host para o seu Caddy existente fazer o reverse proxy
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      # Permite que o container acesse a sua Evolution API existente na porta 8080 do host
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-wkontrol_secret}
+      - POSTGRES_DB=${POSTGRES_DB:-wkontrolai}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - PGUSER=${POSTGRES_USER:-postgres}
+      - PGPASSWORD=${POSTGRES_PASSWORD:-wkontrol_secret}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-wkontrol_secret}@postgres:5432/wkontrolai
+      - REDIS_URL=redis://redis:6379
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://host.docker.internal:8080}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-sua_evolution_api_key_aqui}
+      - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-wkontrol_bot}
+      - EVOLUTION_BOT_PHONE=${EVOLUTION_BOT_PHONE:-5511999999999}
+      - NEXT_PUBLIC_BOT_PHONE=${NEXT_PUBLIC_BOT_PHONE:-5511999999999}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wkontrol_net
+
+  # 2. Worker Assíncrono BullMQ (Processamento de Áudio Groq Whisper + Jev + DeepSeek)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    container_name: wkontrol_worker
+    restart: unless-stopped
+    command: ["pnpm", "worker"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-wkontrol_secret}
+      - POSTGRES_DB=${POSTGRES_DB:-wkontrolai}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - PGUSER=${POSTGRES_USER:-postgres}
+      - PGPASSWORD=${POSTGRES_PASSWORD:-wkontrol_secret}
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-wkontrol_secret}@postgres:5432/wkontrolai
+      - REDIS_URL=redis://redis:6379
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://host.docker.internal:8080}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-sua_evolution_api_key_aqui}
+      - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-wkontrol_bot}
+      - EVOLUTION_BOT_PHONE=${EVOLUTION_BOT_PHONE:-5511999999999}
+      - NEXT_PUBLIC_BOT_PHONE=${NEXT_PUBLIC_BOT_PHONE:-5511999999999}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wkontrol_net
+
+  # 3. Banco de Dados PostgreSQL 16 (Dedicado ao WKontrolAI, isolado internamente sem portas no host)
+  postgres:
+    image: postgres:16-alpine
+    container_name: wkontrol_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wkontrol_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-wkontrolai}
+    volumes:
+      - wkontrol_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-wkontrolai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wkontrol_net
+
+  # 4. Redis 7 (Dedicado ao WKontrolAI para Filas BullMQ e Mutex Lock, isolado na rede interna)
+  redis:
+    image: redis:7-alpine
+    container_name: wkontrol_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - wkontrol_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wkontrol_net
+
+volumes:
+  wkontrol_postgres_data:
+  wkontrol_redis_data:
+
+networks:
+  wkontrol_net:
+    driver: bridge

@@ -1,0 +1,40 @@
+# ==========================================
+# Caddy Reverse Proxy Configuration
+# Automatic SSL (Let's Encrypt) for WKontrolAI
+# ==========================================
+
+# Domínio Principal do Dashboard PWA & API
+{$APP_DOMAIN:app.exemplo.com} {
+    reverse_proxy app:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Gzip e Zstandard compression
+    encode gzip zstd
+
+    # Logs de acesso
+    log {
+        output stdout
+        format console
+    }
+}
+
+# Subdomínio opcional para a Evolution API (WhatsApp Engine)
+{$EVOLUTION_DOMAIN:wa.exemplo.com} {
+    reverse_proxy evolution-api:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    encode gzip zstd
+
+    log {
+        output stdout
+        format console
+    }
+}
