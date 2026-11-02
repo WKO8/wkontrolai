@@ -1,18 +1,21 @@
 /**
  * WKontrolAI — Testes Unitários de Utilitários de Data e Período
- * Cobre: getCurrentPeriod e getAvailablePeriods (src/lib/utils/date.ts e reexportado em src/lib/utils.ts)
+ * Cobre: getCurrentPeriod, getAvailablePeriods, getMonthDateRange e transactionPeriodSchema
  */
 
 import { describe, it, expect } from 'vitest';
 import {
   getCurrentPeriod,
   getAvailablePeriods,
+  getMonthDateRange,
   type PeriodOption,
 } from '@/lib/utils/date';
 import {
   getCurrentPeriod as getCurrentPeriodFromRootUtils,
   getAvailablePeriods as getAvailablePeriodsFromRootUtils,
+  getMonthDateRange as getMonthDateRangeFromRootUtils,
 } from '@/lib/utils';
+import { transactionPeriodSchema } from '@/lib/validations/transaction';
 
 describe('Utilitários de Data e Período (date-utils)', () => {
   describe('1. getCurrentPeriod(referenceDate)', () => {
@@ -177,11 +180,64 @@ describe('Utilitários de Data e Período (date-utils)', () => {
     });
   });
 
-  describe('5. Conformidade de Tipos e Re-exportação em src/lib/utils.ts', () => {
+  describe('5. getMonthDateRange(period) — Cálculo do Intervalo Real do Mês', () => {
+    it('deve retornar "2026-11-01" e "2026-11-30" para Novembro (30 dias)', () => {
+      const range = getMonthDateRange('2026-11');
+      expect(range).toEqual({
+        startDate: '2026-11-01',
+        endDate: '2026-11-30',
+      });
+    });
+
+    it('deve retornar "2026-10-01" e "2026-10-31" para Outubro (31 dias)', () => {
+      const range = getMonthDateRange('2026-10');
+      expect(range).toEqual({
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      });
+    });
+
+    it('deve retornar "2024-02-01" e "2024-02-29" para Fevereiro em ano bissexto (29 dias)', () => {
+      const range = getMonthDateRange('2024-02');
+      expect(range).toEqual({
+        startDate: '2024-02-01',
+        endDate: '2024-02-29',
+      });
+    });
+
+    it('deve retornar "2026-02-01" e "2026-02-28" para Fevereiro em ano não bissexto (28 dias)', () => {
+      const range = getMonthDateRange('2026-02');
+      expect(range).toEqual({
+        startDate: '2026-02-01',
+        endDate: '2026-02-28',
+      });
+    });
+
+    it('deve retornar "2026-04-01" e "2026-04-30" para Abril (30 dias)', () => {
+      const range = getMonthDateRange('2026-04');
+      expect(range).toEqual({
+        startDate: '2026-04-01',
+        endDate: '2026-04-30',
+      });
+    });
+
+    it('deve lançar erro para meses inválidos como "2026-00" e "2026-13"', () => {
+      expect(() => getMonthDateRange('2026-00')).toThrow(/Formato de período inválido/);
+      expect(() => getMonthDateRange('2026-13')).toThrow(/Formato de período inválido/);
+    });
+
+    it('deve lançar erro para strings mal formatadas como "invalid"', () => {
+      expect(() => getMonthDateRange('invalid')).toThrow(/Formato de período inválido/);
+      expect(() => getMonthDateRange('')).toThrow(/Formato de período inválido/);
+    });
+  });
+
+  describe('6. Conformidade de Tipos e Re-exportação em src/lib/utils.ts', () => {
     it('deve permitir importação idêntica a partir de "@/lib/utils"', () => {
       const refDate = new Date(2026, 10, 2);
       expect(getCurrentPeriodFromRootUtils(refDate)).toBe(getCurrentPeriod(refDate));
       expect(getAvailablePeriodsFromRootUtils(3, refDate)).toEqual(getAvailablePeriods(3, refDate));
+      expect(getMonthDateRangeFromRootUtils('2026-11')).toEqual(getMonthDateRange('2026-11'));
     });
 
     it('deve assegurar que todos os itens respeitam a interface PeriodOption', () => {
@@ -192,6 +248,30 @@ describe('Utilitários de Data e Período (date-utils)', () => {
         expect(item.value.length).toBeGreaterThan(0);
         expect(item.label.length).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe('7. Validação de transactionPeriodSchema (@/lib/validations/transaction)', () => {
+    it('deve aceitar períodos válidos no formato YYYY-MM com mês entre 01 e 12', () => {
+      expect(transactionPeriodSchema.safeParse('2026-01').success).toBe(true);
+      expect(transactionPeriodSchema.safeParse('2026-12').success).toBe(true);
+      expect(transactionPeriodSchema.safeParse('2026-06').success).toBe(true);
+      expect(transactionPeriodSchema.safeParse('last-90-days').success).toBe(true);
+      expect(transactionPeriodSchema.safeParse('all').success).toBe(true);
+    });
+
+    it('deve rejeitar meses inválidos como "2026-00" e "2026-13"', () => {
+      const result00 = transactionPeriodSchema.safeParse('2026-00');
+      expect(result00.success).toBe(false);
+
+      const result13 = transactionPeriodSchema.safeParse('2026-13');
+      expect(result13.success).toBe(false);
+    });
+
+    it('deve rejeitar strings mal formatadas', () => {
+      expect(transactionPeriodSchema.safeParse('invalid').success).toBe(false);
+      expect(transactionPeriodSchema.safeParse('2026-1').success).toBe(false);
+      expect(transactionPeriodSchema.safeParse('26-05').success).toBe(false);
     });
   });
 });

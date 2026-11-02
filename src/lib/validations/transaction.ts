@@ -173,7 +173,7 @@ export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 // ==========================================
 
 export const transactionPeriodSchema = z.union([
-  z.string().regex(/^\d{4}-\d{2}$/, 'Período deve estar no formato YYYY-MM'),
+  z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Período deve estar no formato YYYY-MM com mês entre 01 e 12'),
   z.literal('last-90-days'),
   z.literal('all'),
 ]);

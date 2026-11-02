@@ -15,6 +15,7 @@ import {
   transactionItemResponseSchema,
 } from '@/lib/validations/transaction';
 import { normalizeBrazilianPhoneToE164 } from '@/lib/utils/phone';
+import { getMonthDateRange } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,8 +127,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     // Filtro por período específico no formato YYYY-MM (ignora 'last-90-days' e 'all')
     if (filters.period && filters.period !== 'last-90-days' && filters.period !== 'all') {
-      conditions.push(gte(schema.transactions.transactionDate, `${filters.period}-01`));
-      conditions.push(lte(schema.transactions.transactionDate, `${filters.period}-31`));
+      const { startDate: periodStart, endDate: periodEnd } = getMonthDateRange(filters.period);
+      conditions.push(gte(schema.transactions.transactionDate, periodStart));
+      conditions.push(lte(schema.transactions.transactionDate, periodEnd));
     }
 
     // Filtro por intervalo de datas customizado ou derivado

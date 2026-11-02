@@ -7,6 +7,25 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/spec
 
 ---
 
+## [1.2.2] - 2026-11-02
+
+### Fixed
+- **Cálculo de Data Limite de Fim de Mês no Filtro de Período de Transações (`date/time field value out of range`):**
+  - Correção de bug crítico no endpoint GET `/api/transactions` ([`src/app/api/transactions/route.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/app/api/transactions/route.ts#L128-L133)) onde a query de transações concatenava o dia fixo `-31` (`${filters.period}-31`) para determinar o fim do período. Em meses com menos de 31 dias (como Novembro de 2026 com 30 dias gerando `'2026-11-31'`, além de Fevereiro, Abril, Junho e Setembro), o PostgreSQL disparava o erro `date/time field value out of range` (código 22008), resultando em `HTTP 500 Internal Server Error` e exibição indevida de tela vazia (`EmptyState`) no Dashboard, embora com "Todos os períodos" os lançamentos fossem exibidos normalmente.
+  - Substituição da concatenação estática pela função utilitária [`getMonthDateRange`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils/date.ts#L33-L46), delimitando dinamicamente os intervalos com o último dia real em UTC (`periodStart` e `periodEnd`) nas cláusulas `gte` e `lte` do Drizzle ORM.
+
+### Added
+- **Função Utilitária de Intervalo Real do Mês (`getMonthDateRange`):**
+  - Criação da função [`getMonthDateRange`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils/date.ts#L33-L46) no módulo [`src/lib/utils/date.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils/date.ts) e reexportação centralizada em [`src/lib/utils.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils.ts#L97). A função calcula dinamicamente o último dia real de cada mês em UTC via `Date.UTC(year, month, 0).getUTCDate()`, cobrindo anos bissextos e meses de 28, 29, 30 ou 31 dias, com tratamento defensivo e validação de formato contra entradas inválidas.
+- **Testes Unitários Automatizados de Intervalo de Datas e Validações:**
+  - Inclusão de testes unitários abrangentes na suíte [`tests/date-utils.test.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/tests/date-utils.test.ts#L183-L277) cobrindo cálculo exato de limites para Novembro (30 dias), Outubro (31 dias), Fevereiro bissexto (29 dias em 2024), Fevereiro não-bissexto (28 dias em 2026), Abril (30 dias), lançamento defensivo de erros para entradas inválidas (`2026-00`, `2026-13`, strings vazias ou mal formatadas) e testes de schema Zod.
+
+### Security
+- **Blindagem e Validação Defensiva de Períodos na Borda (Schema Zod):**
+  - Reforço no schema [`transactionPeriodSchema`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/validations/transaction.ts#L175-L179) em [`src/lib/validations/transaction.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/validations/transaction.ts) com a expressão regular `/^\d{4}-(0[1-9]|1[0-2])$/`, restringindo estritamente meses de 01 a 12 e garantindo rejeição segura com `HTTP 400 Bad Request` na borda antes de qualquer consulta ao PostgreSQL.
+
+---
+
 ## [1.2.1] - 2026-11-02
 
 ### Fixed
