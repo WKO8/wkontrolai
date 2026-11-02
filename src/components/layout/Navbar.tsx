@@ -18,7 +18,7 @@ import { useTheme } from '@/components/providers/ThemeProvider';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { formatPhoneDisplay } from '@/lib/utils/phone';
-import { cn } from '@/lib/utils';
+import { cn, getCurrentPeriod, getAvailablePeriods } from '@/lib/utils';
 import type { BottomNavTab } from '@/components/layout/BottomNav';
 
 export interface NavbarProps {
@@ -36,19 +36,13 @@ export function Navbar({
   onSelectTab,
   onOpenNewTransaction,
   onOpenPairing,
-  selectedPeriod = '2026-10',
+  selectedPeriod = getCurrentPeriod(),
   onPeriodChange,
   whatsappPhone,
 }: NavbarProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
 
-  const periods = [
-    { value: '2026-10', label: 'Outubro 2026 (Atual)' },
-    { value: '2026-09', label: 'Setembro 2026' },
-    { value: '2026-08', label: 'Agosto 2026' },
-    { value: 'last-90-days', label: 'Últimos 90 dias' },
-    { value: 'all', label: 'Todos os períodos' },
-  ];
+  const periods = getAvailablePeriods(3);
 
   const formattedPhone = whatsappPhone ? formatPhoneDisplay(whatsappPhone) : null;
 

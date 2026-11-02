@@ -94,6 +94,7 @@ export function getCategoryColor(categoryName: string): string {
 }
 
 export * from './utils/phone';
+export * from './utils/date';
 
 /**
  * Retorna o número oficial do bot do WhatsApp do WKontrolAI (E.164 limpo sem pontuação)

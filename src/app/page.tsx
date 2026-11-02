@@ -22,7 +22,7 @@ import { EmptyState } from '@/components/dashboard/EmptyState';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { getCategoryColor } from '@/lib/utils';
+import { getCategoryColor, getCurrentPeriod } from '@/lib/utils';
 import type {
   TransactionEntity,
   CategoryEntity,
@@ -157,7 +157,7 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [categories, setCategories] = useState<CategoryEntity[]>(DEFAULT_CATEGORIES);
   const [insights, setInsights] = useState<AiInsightEntity[]>(INITIAL_INSIGHTS);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('2026-10');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(() => getCurrentPeriod());
   const [activeBottomTab, setActiveBottomTab] = useState<BottomNavTab>('dashboard');
   const [pairedPhone, setPairedPhone] = useState<string | null>(null);
 
@@ -669,7 +669,7 @@ export default function DashboardPage() {
                     transactions={transactions}
                     period={
                       selectedPeriod === 'last-90-days' || selectedPeriod === 'all'
-                        ? '2026-10'
+                        ? getCurrentPeriod()
                         : selectedPeriod
                     }
                     isLoading={isLoading}

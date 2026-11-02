@@ -7,6 +7,22 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/spec
 
 ---
 
+## [1.2.1] - 2026-11-02
+
+### Fixed
+- **Seletor Dinâmico de Período e Virada de Mês no Dashboard:**
+  - Correção de bug no seletor de períodos/meses que mantinha fixo "Outubro 2026 (Atual)" mesmo após a virada para Novembro de 2026.
+  - Atualização do componente [`Navbar.tsx`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/components/layout/Navbar.tsx) e da página inicial [`page.tsx`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/app/page.tsx) para adotar dinamicamente o mês atual com sufixo `(Atual)` e histórico dos últimos meses em vez de opções fixas.
+
+### Added
+- **Utilitários Dinâmicos de Data e Período (`date-utils`):**
+  - Criação dos utilitários [`getCurrentPeriod`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils/date.ts#L6-L10) (formato canônico `YYYY-MM`) e [`getAvailablePeriods`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils/date.ts#L12-L27) (geração dinâmica de opções de meses retroativos com capitalização em português, identificação de mês atual e opções agregadas `last-90-days` e `all`) no módulo [`date.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils/date.ts).
+  - Exportação e reexportação centralizada no arquivo de utilitários raiz [`utils.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/src/lib/utils.ts).
+- **Suíte de Testes Automatizados de Período e Data:**
+  - Inclusão da suíte de testes unitários [`date-utils.test.ts`](file:///mnt/SSD-WKO/MyData/Programming/Projects/WKontrolAI/tests/date-utils.test.ts) com 100% de aprovação no Vitest, cobrindo formatação `YYYY-MM`, viradas de ano/mês, anos bissextos, capitalização em português e consistência de períodos.
+
+---
+
 ## [1.2.0] - 2026-10-30
 
 ### Added
